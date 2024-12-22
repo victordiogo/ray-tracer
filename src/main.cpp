@@ -12,10 +12,10 @@ auto random_color(float min = 0.0f, float max = 1.0f) -> glm::vec3 {
 }
 
 auto main() -> int {
-  auto ppm = PPM{"output.ppm", 1920, 1080};
+  auto ppm = PPM{"output.ppm", 1280, 720};
   constexpr auto fov = 20.0f * glm::pi<float>() / 180.0f;
-  constexpr auto num_samples = 500u;
-  constexpr auto max_depth = 25u;
+  constexpr auto num_samples = 50u;
+  constexpr auto max_depth = 15u;
   constexpr auto look_from = glm::vec3{13.0f, 2.0f, 3.0f};
   constexpr auto look_at = glm::vec3{0.0f, 0.0f, 0.0f};
   constexpr auto defocus_angle = 0.6f * glm::pi<float>() / 180.0f;

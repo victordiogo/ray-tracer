@@ -82,8 +82,10 @@ auto render(PPM& ppm, const RenderOptions& options, const Hittables& hittables) 
   auto defocus_radius = options.focus_distance * std::tan(options.defocus_angle / 2);
 
   auto color_scale = 1.0f / static_cast<float>(options.num_samples);
-    
+
   for (auto y = 0u; y < ppm.height(); ++y) {
+    auto progress = static_cast<float>(y) / heightf;
+    std::cout << "Progress: " << progress * 100.0f << "%\n";
     for (auto x = 0u; x < ppm.width(); ++x) {
       auto color = glm::vec3{0.0f};
       auto direction = start + 
