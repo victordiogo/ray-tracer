@@ -6,9 +6,9 @@
 
 namespace prng {
   auto rd = std::random_device{};
+  auto time = std::chrono::steady_clock::now().time_since_epoch().count();
   auto seed_seq = std::seed_seq{
-    static_cast<std::seed_seq::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()),
-    rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+    static_cast<std::seed_seq::result_type>(time), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
   auto mt = std::mt19937{seed_seq};
 
   template <typename T>

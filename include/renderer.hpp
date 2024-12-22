@@ -3,6 +3,7 @@
 
 #include "ppm.hpp"
 #include "hittable.hpp"
+#include "timer.hpp"
 #include "random.hpp"
 #include "material.hpp"
 
@@ -15,7 +16,6 @@
 #include <cmath>
 
 constexpr auto g_max_float = std::numeric_limits<float>::max();
-using Hittables = std::vector<std::shared_ptr<Hittable>>;
 
 auto trace(const Ray& ray, const Hittables& hittables) -> std::optional<HitRecord> {
   auto closest_hit_record = HitRecord{g_max_float};
@@ -63,7 +63,7 @@ struct RenderOptions {
   float defocus_angle{};
 };
 
-auto render(PPM& ppm, const RenderOptions& options, const Hittables& hittables) -> void {
+auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) -> void {
   auto widthf = static_cast<float>(ppm.width());
   auto heightf = static_cast<float>(ppm.height());
   auto aspect_ratio = widthf / heightf;
@@ -83,9 +83,11 @@ auto render(PPM& ppm, const RenderOptions& options, const Hittables& hittables) 
 
   auto color_scale = 1.0f / static_cast<float>(options.num_samples);
 
+  auto timer = Timer{};
+  std::cout << std::fixed << std::setprecision(2);
   for (auto y = 0u; y < ppm.height(); ++y) {
     auto progress = static_cast<float>(y) / heightf;
-    std::cout << "Progress: " << progress * 100.0f << "%\n";
+    std::cout << "Progress: " << progress * 100.0f << "% (" << timer.elapsed() / 1000 << "s)\n";
     for (auto x = 0u; x < ppm.width(); ++x) {
       auto color = glm::vec3{0.0f};
       auto direction = start + 
@@ -102,13 +104,14 @@ auto render(PPM& ppm, const RenderOptions& options, const Hittables& hittables) 
           prng::get_real(-0.5f, 0.5f) * dv;
 
         auto origin = options.look_from + lens_offset;
-        auto ray = Ray{origin, direction + dir_offset - origin};
+        auto ray = Ray{origin, direction + dir_offset - origin, prng::get_real(0.0f, 1.0f)};
         color += ray_cast(ray, options.max_depth, hittables);
       }
 
       ppm.write_color(color * color_scale);
     }
   }
+  std::cout << "Progress: 100% (" << timer.elapsed() / 1000 << "s)\n";
 }
 
 #endif

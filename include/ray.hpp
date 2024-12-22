@@ -7,9 +7,10 @@ class Ray final {
 public:
   Ray() = default;
 
-  Ray(const glm::vec3& origin, const glm::vec3& direction)
+  Ray(const glm::vec3& origin, const glm::vec3& direction, float time = 0.0f)
     : m_origin{origin}
-    , m_direction{direction} {
+    , m_direction{direction}
+    , m_time{time} {
   }
 
   auto origin() const -> const glm::vec3& {
@@ -20,6 +21,10 @@ public:
     return m_direction;
   }
 
+  auto time() const -> float {
+    return m_time;
+  }
+
   auto at(float t) const -> glm::vec3 {
     return m_origin + t * m_direction;
   }
@@ -27,6 +32,7 @@ public:
 private:
   glm::vec3 m_origin{};
   glm::vec3 m_direction{};
+  float m_time{};
 };
 
 #endif

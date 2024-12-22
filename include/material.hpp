@@ -49,7 +49,7 @@ public:
     : m_albedo{albedo}
   {}
 
-  auto scatter(const Ray&, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
+  auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
     auto scatter_direction = hit_record.normal + random_unit_vector();
     if (near_zero(scatter_direction)) {
       scatter_direction = hit_record.normal;
@@ -57,7 +57,7 @@ public:
 
     auto point = hit_record.point + hit_record.normal * 0.0001f;
 
-    return ScatterData{m_albedo, Ray{point, scatter_direction}};
+    return ScatterData{m_albedo, Ray{point, scatter_direction, ray.time()}};
   }
 
 private:
@@ -79,7 +79,7 @@ public:
 
     auto point = hit_record.point + hit_record.normal * 0.0001f;
 
-    return ScatterData{m_albedo, Ray{point, reflected}};
+    return ScatterData{m_albedo, Ray{point, reflected, ray.time()}};
   }
 
 private:
@@ -115,7 +115,7 @@ public:
       scattered_direction = glm::refract(direction, hit_record.normal, ri);
     }
 
-    return ScatterData{glm::vec3{1.0f}, Ray{point, scattered_direction}};
+    return ScatterData{glm::vec3{1.0f}, Ray{point, scattered_direction, ray.time()}};
   }
 
 private:

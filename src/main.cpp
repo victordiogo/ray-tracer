@@ -1,6 +1,7 @@
 #include "sphere.hpp"
 #include "renderer.hpp"
 #include "material.hpp"
+#include "bvh.hpp"
 
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
@@ -12,10 +13,10 @@ auto random_color(float min = 0.0f, float max = 1.0f) -> glm::vec3 {
 }
 
 auto main() -> int {
-  auto ppm = PPM{"output.ppm", 1280, 720};
+  auto ppm = Ppm{"output.ppm", 500, 300};
   constexpr auto fov = 20.0f * glm::pi<float>() / 180.0f;
-  constexpr auto num_samples = 50u;
-  constexpr auto max_depth = 15u;
+  constexpr auto num_samples = 25u;
+  constexpr auto max_depth = 10u;
   constexpr auto look_from = glm::vec3{13.0f, 2.0f, 3.0f};
   constexpr auto look_at = glm::vec3{0.0f, 0.0f, 0.0f};
   constexpr auto defocus_angle = 0.6f * glm::pi<float>() / 180.0f;
@@ -36,9 +37,11 @@ auto main() -> int {
 
       if (glm::length(center - glm::vec3{4.0f, 0.2f, 0.0f}) > 0.9f) {
         std::shared_ptr<Material> sphere_material;
+        auto center2 = center;
 
         if (choose_material < 0.8f) {
           auto albedo = random_color() * random_color();
+          center2 += glm::vec3{0.0f, prng::get_real(0.0f, 0.5f), 0.0f};
           sphere_material = std::make_shared<Lambertian>(albedo);
         } else if (choose_material < 0.95f) {
           auto albedo = random_color(0.5f, 1.0f);
@@ -48,7 +51,7 @@ auto main() -> int {
           sphere_material = std::make_shared<Dielectric>(1.5f);
         }
 
-        auto sphere = std::make_shared<Sphere>(center, 0.2f, sphere_material);
+        auto sphere = std::make_shared<Sphere>(center, center2, 0.2f, sphere_material);
         hittables.push_back(sphere);
       }
     }
@@ -65,6 +68,8 @@ auto main() -> int {
   auto material3 = std::make_shared<Metal>(glm::vec3{0.7f, 0.6f, 0.5f}, 0.0f);
   auto sphere3 = std::make_shared<Sphere>(glm::vec3{4.0f, 1.0f, 0.0f}, 1.0f, material3);
   hittables.push_back(sphere3);
+
+  hittables = {std::make_shared<BvhNode>(hittables)};
 
   auto options = RenderOptions{fov, num_samples, max_depth, look_from, look_at, focus_distance, defocus_angle};
   render(ppm, options, hittables);

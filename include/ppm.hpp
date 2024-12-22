@@ -12,9 +12,9 @@ auto linear_to_gamma(float linear) -> float {
   return std::pow(linear, 1.0f / 2.2f);
 }
 
-class PPM final {
+class Ppm final {
 public:
-  PPM(const std::string& name, unsigned width, unsigned height) 
+  Ppm(const std::string& name, unsigned width, unsigned height) 
     : m_file{name, std::ios::binary}
     , m_width{width}
     , m_height{height} 
