@@ -84,11 +84,12 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
 
   auto color_scale = 1.0f / static_cast<float>(options.num_samples);
 
+  auto framebuffer = std::vector<glm::vec3>(ppm.width() * ppm.height());
+
   auto timer = Timer{};
-  std::cout << std::fixed << std::setprecision(2);
+
+  #pragma omp parallel for
   for (auto y = 0u; y < ppm.height(); ++y) {
-    auto progress = static_cast<float>(y) / heightf;
-    std::cout << "Progress: " << progress * 100.0f << "% (" << timer.elapsed() / 1000 << "s)\n";
     for (auto x = 0u; x < ppm.width(); ++x) {
       auto color = glm::vec3{0.0f};
       auto direction = start + 
@@ -109,10 +110,14 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
         color += ray_cast(ray, options.max_depth, hittables);
       }
 
-      ppm.write_color(color * color_scale);
+      framebuffer[y * ppm.width() + x] = color * color_scale;
     }
   }
-  std::cout << "Progress: 100% (" << timer.elapsed() / 1000 << "s)\n";
+  std::cout << "Render time: " << timer.elapsed() / 1000 << "s\n";
+
+  for (auto i = 0u; i < ppm.width() * ppm.height(); ++i) {
+    ppm.write_color(framebuffer[i]);
+  }
 }
 
 #endif

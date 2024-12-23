@@ -25,6 +25,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+find_package(OpenMP)
+
 set(external_lib_dir ${CMAKE_BINARY_DIR}/external)
 
 # stb_image.h
@@ -43,4 +45,4 @@ add_executable(${program_executable_name} ${src_files})
 target_include_directories(${program_executable_name} PRIVATE include)
 target_include_directories(${program_executable_name} PRIVATE ${external_lib_dir}/include)
 target_compile_options(${program_executable_name} PRIVATE ${compile_options})
-target_link_libraries(${program_executable_name} PRIVATE glm::glm)
+target_link_libraries(${program_executable_name} PRIVATE glm::glm OpenMP::OpenMP_CXX)

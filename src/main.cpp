@@ -15,7 +15,7 @@ auto random_color(float min = 0.0f, float max = 1.0f) -> glm::vec3 {
 }
 
 auto bouncing_spheres() {
-  auto ppm = Ppm{"output.ppm", 500, 250};
+  auto ppm = Ppm{"output.ppm", 1920, 1080};
   constexpr auto fov = 20.0f * glm::pi<float>() / 180.0f;
   constexpr auto num_samples = 30u;
   constexpr auto max_depth = 10u;
@@ -135,7 +135,7 @@ auto world() {
 }
 
 auto perlin_spheres() {
-  auto ppm = Ppm{"output.ppm", 600, 400};
+  auto ppm = Ppm{"output.ppm", 1280, 720};
   
   auto options = RenderOptions{};
   options.fov = 20.0f * glm::pi<float>() / 180.0f;
@@ -163,10 +163,10 @@ auto perlin_spheres() {
 }
 
 auto main() -> int {
-  // bouncing_spheres();
+  bouncing_spheres();
   // checkered_spheres();
   // world();
-  perlin_spheres();
+  // perlin_spheres();
 
   return 0;
 }
