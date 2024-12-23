@@ -88,7 +88,7 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
 
   auto timer = Timer{};
 
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic, 1)
   for (auto y = 0u; y < ppm.height(); ++y) {
     for (auto x = 0u; x < ppm.width(); ++x) {
       auto color = glm::vec3{0.0f};
