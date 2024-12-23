@@ -4,6 +4,7 @@
 #include "ray.hpp"
 #include "hittable.hpp"
 #include "random.hpp"
+#include "texture.hpp"
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -46,8 +47,12 @@ auto random_hemisphere_vector(const glm::vec3& normal) -> glm::vec3 {
 class Lambertian : public Material {
 public:
   Lambertian(const glm::vec3& albedo)
-    : m_albedo{albedo}
+    : m_texture{std::make_shared<SolidColor>(albedo)}
   {}
+
+  Lambertian(std::shared_ptr<Texture> texture)
+    : m_texture{texture}
+  {}  
 
   auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
     auto scatter_direction = hit_record.normal + random_unit_vector();
@@ -57,11 +62,12 @@ public:
 
     auto point = hit_record.point + hit_record.normal * 0.0001f;
 
-    return ScatterData{m_albedo, Ray{point, scatter_direction, ray.time()}};
+    auto attenuation = m_texture->value(hit_record.texture_coords.x, hit_record.texture_coords.y, hit_record.point);
+    return ScatterData{attenuation, Ray{point, scatter_direction, ray.time()}};
   }
 
 private:
-  glm::vec3 m_albedo{};
+  std::shared_ptr<Texture> m_texture{};
 };
 
 class Metal : public Material {

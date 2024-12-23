@@ -25,7 +25,22 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+set(external_lib_dir ${CMAKE_BINARY_DIR}/external)
+
+# stb_image.h
+file(
+	DOWNLOAD
+	"https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
+	"${external_lib_dir}/include/stb_image.h"
+)
+
+file(
+	COPY assets
+	DESTINATION ${CMAKE_BINARY_DIR}
+)
+
 add_executable(${program_executable_name} ${src_files})
 target_include_directories(${program_executable_name} PRIVATE include)
+target_include_directories(${program_executable_name} PRIVATE ${external_lib_dir}/include)
 target_compile_options(${program_executable_name} PRIVATE ${compile_options})
 target_link_libraries(${program_executable_name} PRIVATE glm::glm)

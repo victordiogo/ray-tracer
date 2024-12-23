@@ -18,6 +18,7 @@ struct HitRecord {
   glm::vec3 point{};
   glm::vec3 normal{};
   std::shared_ptr<Material> material{};
+  glm::vec2 texture_coords{};
 };
 
 class Hittable {

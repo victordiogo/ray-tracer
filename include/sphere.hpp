@@ -6,6 +6,7 @@
 
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
+#include <glm/ext/scalar_constants.hpp>
 
 #include <stdexcept>
 #include <optional>
@@ -57,8 +58,17 @@ public:
 
     auto point = ray.at(root);
     auto out_normal = (point - center) / m_radius;
+    auto texture_coords = get_texture_coords(out_normal);
 
-    return HitRecord{root, front_face, point, front_face ? out_normal : -out_normal, m_material};
+    return HitRecord{root, front_face, point, front_face ? out_normal : -out_normal, m_material, texture_coords};
+  }
+
+  auto get_texture_coords(const glm::vec3& normal) const -> glm::vec2 {
+    auto theta = std::acos(-normal.y);
+    auto phi = std::atan2(-normal.z, normal.x) + glm::pi<float>();
+    auto u = phi / (2.0f * glm::pi<float>());
+    auto v = theta / glm::pi<float>();
+    return {u, v};
   }
 
   auto bounding_box() const -> Aabb override {
