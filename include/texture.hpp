@@ -2,6 +2,7 @@
 #define RT_TEXTURE_HPP
 
 #include "image.hpp"
+#include "perlin.hpp"
 
 #include <glm/vec3.hpp>
 
@@ -59,8 +60,10 @@ public:
   ImageTexture(const Image& image) : m_image{image} {}
 
   auto value(float u, float v, const glm::vec3&) const -> glm::vec3 override {
-    auto i = static_cast<unsigned>(u * m_image.width);
-    auto j = static_cast<unsigned>(v * m_image.height);
+    auto widthf = static_cast<float>(m_image.width);
+    auto heightf = static_cast<float>(m_image.height);
+    auto i = static_cast<unsigned>(u * widthf);
+    auto j = static_cast<unsigned>(v * heightf);
 
     i = std::clamp(i, 0u, m_image.width - 1u);
     j = std::clamp(j, 0u, m_image.height - 1u);
@@ -70,6 +73,19 @@ public:
 
 private:
   Image m_image{};
+};
+
+class NoiseTexture : public Texture {
+public:
+  NoiseTexture(float scale = 1.0f) : m_perlin{}, m_scale{scale} {}
+
+  auto value(float, float, const glm::vec3& point) const -> glm::vec3 override {
+    return glm::vec3{0.5f} * (1.0f + std::sin(m_scale * point.z + 10.0f * m_perlin.turb(m_scale * point)));
+  }
+
+private:
+  Perlin m_perlin{};
+  float m_scale{};
 };
 
 #endif

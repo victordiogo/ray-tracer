@@ -107,13 +107,15 @@ auto checkered_spheres() {
 
 auto world() {
   auto ppm = Ppm{"output.ppm", 1000, 600};
-  constexpr auto fov = 20.0f * glm::pi<float>() / 180.0f;
-  constexpr auto num_samples = 100u;
-  constexpr auto max_depth = 8u;
-  constexpr auto look_from = glm::vec3{0.0f, 0.0f, 12.0f};
-  constexpr auto look_at = glm::vec3{0.0f, 0.0f, 0.0f};
-  constexpr auto defocus_angle = 0.0f;
-  auto focus_distance = 10.0f;
+  
+  auto options = RenderOptions{};
+  options.fov = 20.0f * glm::pi<float>() / 180.0f;
+  options.num_samples = 100u;
+  options.max_depth = 8u;
+  options.look_from = glm::vec3{0.0f, 0.0f, 12.0f};
+  options.look_at = glm::vec3{0.0f, 0.0f, 0.0f};
+  options.defocus_angle = 0.0f;
+  options.focus_distance = 10.0f;
 
   auto hittables = Hittables{};
 
@@ -129,15 +131,42 @@ auto world() {
 
   hittables = {std::make_shared<BvhNode>(hittables)};
 
-  auto options = RenderOptions{fov, num_samples, max_depth, look_from, look_at, focus_distance, defocus_angle};
+  render(ppm, options, hittables);
+}
+
+auto perlin_spheres() {
+  auto ppm = Ppm{"output.ppm", 600, 400};
+  
+  auto options = RenderOptions{};
+  options.fov = 20.0f * glm::pi<float>() / 180.0f;
+  options.num_samples = 25u;
+  options.max_depth = 8u;
+  options.look_from = glm::vec3{13.0f, 2.0f, 3.0f};
+  options.look_at = glm::vec3{0.0f, 0.0f, 0.0f};
+  options.defocus_angle = 0.0f;
+  options.focus_distance = 10.0f;
+
+  auto hittables = Hittables{};
+
+  auto texture = std::make_shared<NoiseTexture>(2.0f);
+  auto material = std::make_shared<Lambertian>(texture);
+
+  auto sphere1 = std::make_shared<Sphere>(glm::vec3{0.0f, -1000.0f, 0.0f}, 1000.0f, material);
+  hittables.push_back(sphere1);
+
+  auto sphere2 = std::make_shared<Sphere>(glm::vec3{0.0f, 2.0f, 0.0f}, 2.0f, material);
+  hittables.push_back(sphere2);
+
+  hittables = {std::make_shared<BvhNode>(hittables)};
+
   render(ppm, options, hittables);
 }
 
 auto main() -> int {
   // bouncing_spheres();
   // checkered_spheres();
-  world();
-
+  // world();
+  perlin_spheres();
 
   return 0;
 }

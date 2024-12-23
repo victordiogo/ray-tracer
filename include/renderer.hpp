@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <cmath>
+#include <optional>
 
 constexpr auto g_max_float = std::numeric_limits<float>::max();
 

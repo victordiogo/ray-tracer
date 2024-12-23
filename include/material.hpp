@@ -5,6 +5,7 @@
 #include "hittable.hpp"
 #include "random.hpp"
 #include "texture.hpp"
+#include "random.hpp"
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -30,17 +31,8 @@ auto near_zero(const glm::vec3& vec) -> bool {
   return (std::fabs(vec.x) < s) && (std::fabs(vec.y) < s) && (std::fabs(vec.z) < s);
 }
 
-auto random_unit_vector() -> glm::vec3 {
-  auto theta = prng::get_real(0.0f, 2.0f * glm::pi<float>());
-  auto phi = prng::get_real(0.0f, glm::pi<float>());
-  return glm::vec3{
-    std::sin(phi) * std::cos(theta),
-    std::cos(phi),
-    std::sin(phi) * std::sin(theta)};
-}
-
 auto random_hemisphere_vector(const glm::vec3& normal) -> glm::vec3 {
-  auto unit_vector = random_unit_vector();
+  auto unit_vector = prng::get_unit_vector();
   return glm::dot(unit_vector, normal) > 0.0f ? unit_vector : -unit_vector;
 }
 
@@ -55,7 +47,7 @@ public:
   {}  
 
   auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
-    auto scatter_direction = hit_record.normal + random_unit_vector();
+    auto scatter_direction = hit_record.normal + prng::get_unit_vector();
     if (near_zero(scatter_direction)) {
       scatter_direction = hit_record.normal;
     }
@@ -78,7 +70,7 @@ public:
 
   auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
     auto reflected = glm::reflect(ray.direction(), hit_record.normal);
-    reflected = glm::normalize(reflected) + (m_fuzz * random_unit_vector());
+    reflected = glm::normalize(reflected) + (m_fuzz * prng::get_unit_vector());
     if (glm::dot(reflected, hit_record.normal) <= 0.0f) {
       return {};
     }
