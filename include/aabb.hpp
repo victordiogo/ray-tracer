@@ -3,49 +3,64 @@
 
 #include "ray.hpp"
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include <stdexcept>
 #include <cmath>
-
-auto min_vec(const glm::vec3& a, const glm::vec3& b) -> glm::vec3 {
-  return glm::vec3{std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z)};
-}
-
-auto max_vec(const glm::vec3& a, const glm::vec3& b) -> glm::vec3 {
-  return glm::vec3{std::fmax(a.x, b.x), std::fmax(a.y, b.y), std::fmax(a.z, b.z)};
-}
+#include <array>
 
 class Aabb {
 public:
+  struct Interval {
+    float min{};
+    float max{};
+  };
+
   Aabb() = default;
 
-  Aabb(const glm::vec3& min, const glm::vec3& max)
-    : m_min{min}
-    , m_max{max}
+  Aabb(const glm::vec3& a, const glm::vec3& b)
+    : m_axes{Interval{a.x, b.x}, Interval{a.y, b.y}, Interval{a.z, b.z}}
   {
-    if (m_min.x > m_max.x || m_min.y > m_max.y || m_min.z > m_max.z) {
-      throw std::invalid_argument{"Invalid AABB"};
+    if (m_axes[0].min > m_axes[0].max) {
+      std::swap(m_axes[0].min, m_axes[0].max);
     }
+    if (m_axes[1].min > m_axes[1].max) {
+      std::swap(m_axes[1].min, m_axes[1].max);
+    }
+    if (m_axes[2].min > m_axes[2].max) {
+      std::swap(m_axes[2].min, m_axes[2].max);
+    }
+
+    pad_to_minimuns();
   }
 
   Aabb(const Aabb& aabb1, const Aabb& aabb2)
-    : Aabb{min_vec(aabb1.min(), aabb2.min()), max_vec(aabb1.max(), aabb2.max())}
+    : m_axes{Interval{std::min(aabb1.m_axes[0].min, aabb2.m_axes[0].min), std::max(aabb1.m_axes[0].max, aabb2.m_axes[0].max)},
+             Interval{std::min(aabb1.m_axes[1].min, aabb2.m_axes[1].min), std::max(aabb1.m_axes[1].max, aabb2.m_axes[1].max)},
+             Interval{std::min(aabb1.m_axes[2].min, aabb2.m_axes[2].min), std::max(aabb1.m_axes[2].max, aabb2.m_axes[2].max)}}
   {}
 
-  auto min() const -> const glm::vec3& {
-    return m_min;
+  auto operator+(const glm::vec3& offset) const -> Aabb {
+    return Aabb{glm::vec3{m_axes[0].min + offset.x, m_axes[1].min + offset.y, m_axes[2].min + offset.z},
+                glm::vec3{m_axes[0].max + offset.x, m_axes[1].max + offset.y, m_axes[2].max + offset.z}};
   }
 
-  auto max() const -> const glm::vec3& {
-    return m_max;
+  friend auto operator+(const glm::vec3& offset, const Aabb& aabb) -> Aabb {
+    return aabb + offset;
+  }
+
+  auto axes() const -> const std::array<Interval, 3>& {
+    return m_axes;
   }
 
   auto hit(const Ray& ray, float min_distance, float max_distance) const -> bool {
-    for (int axis = 0; axis < 3; ++axis) {
-      auto inv_d = 1.0f / ray.direction()[axis];
-      auto t0 = (m_min[axis] - ray.origin()[axis]) * inv_d;
-      auto t1 = (m_max[axis] - ray.origin()[axis]) * inv_d;
+    for (auto axis_index = 0u; axis_index < 3u; ++axis_index) {
+      auto axis = m_axes[axis_index];
+      auto indexi = static_cast<int>(axis_index);
+      auto inv_d = 1.0f / ray.direction()[indexi];
+      auto t0 = (axis.min - ray.origin()[indexi]) * inv_d;
+      auto t1 = (axis.max - ray.origin()[indexi]) * inv_d;
       if (inv_d < 0.0f) {
         std::swap(t0, t1);
       }
@@ -58,20 +73,38 @@ public:
     return true;
   }
 
-  auto longest_axis() const -> int {
-    auto extent = m_max - m_min;
-    if (extent.x > extent.y && extent.x > extent.z) {
-      return 0;
+  auto longest_axis() const -> unsigned {
+    auto extent_x = m_axes[0].max - m_axes[0].min;
+    auto extent_y = m_axes[1].max - m_axes[1].min;
+    auto extent_z = m_axes[2].max - m_axes[2].min;
+
+    if (extent_x > extent_y && extent_x > extent_z) {
+      return 0u;
     }
-    if (extent.y > extent.z) {
-      return 1;
+    if (extent_y > extent_z) {
+      return 1u;
     }
-    return 2;
+    return 2u;
   }
 
 private:
-  glm::vec3 m_min{};
-  glm::vec3 m_max{};
+  std::array<Interval, 3> m_axes{};
+
+  auto pad_to_minimuns() -> void {
+    auto delta = 0.0002f;
+    if (m_axes[0].max - m_axes[0].min < delta) {
+      m_axes[0].max += 0.5f * delta;
+      m_axes[0].min -= 0.5f * delta;
+    }
+    if (m_axes[1].max - m_axes[1].min < delta) {
+      m_axes[1].max += 0.5f * delta;
+      m_axes[1].min -= 0.5f * delta;
+    }
+    if (m_axes[2].max - m_axes[2].min < delta) {
+      m_axes[2].max += 0.5f * delta;
+      m_axes[2].min -= 0.5f * delta;
+    }
+  }
 };
 
 #endif

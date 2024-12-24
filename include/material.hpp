@@ -14,6 +14,8 @@
 #include <optional>
 #include <cmath>
 
+constexpr auto g_bias = 0.0005f;
+
 class Material {
 public:
   virtual ~Material() = default;
@@ -21,6 +23,7 @@ public:
   struct ScatterData {
     glm::vec3 attenuation{};
     Ray scattered{};
+    glm::vec3 emission{};
   };
 
   virtual auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> = 0;
@@ -28,12 +31,7 @@ public:
 
 auto near_zero(const glm::vec3& vec) -> bool {
   const float s = 1e-6f;
-  return (std::fabs(vec.x) < s) && (std::fabs(vec.y) < s) && (std::fabs(vec.z) < s);
-}
-
-auto random_hemisphere_vector(const glm::vec3& normal) -> glm::vec3 {
-  auto unit_vector = prng::get_unit_vector();
-  return glm::dot(unit_vector, normal) > 0.0f ? unit_vector : -unit_vector;
+  return (std::abs(vec.x) < s) && (std::abs(vec.y) < s) && (std::abs(vec.z) < s);
 }
 
 class Lambertian : public Material {
@@ -52,7 +50,7 @@ public:
       scatter_direction = hit_record.normal;
     }
 
-    auto point = hit_record.point + hit_record.normal * 0.0001f;
+    auto point = hit_record.point + hit_record.normal * g_bias;
 
     auto attenuation = m_texture->value(hit_record.texture_coords.x, hit_record.texture_coords.y, hit_record.point);
     return ScatterData{attenuation, Ray{point, scatter_direction, ray.time()}};
@@ -61,7 +59,7 @@ public:
 private:
   std::shared_ptr<Texture> m_texture{};
 };
-
+ 
 class Metal : public Material {
 public:
   Metal(const glm::vec3& albedo, float fuzz) 
@@ -75,7 +73,7 @@ public:
       return {};
     }
 
-    auto point = hit_record.point + hit_record.normal * 0.0001f;
+    auto point = hit_record.point + hit_record.normal * g_bias;
 
     return ScatterData{m_albedo, Ray{point, reflected, ray.time()}};
   }
@@ -104,13 +102,15 @@ public:
     auto cos_theta = std::fmin(glm::dot(-direction, hit_record.normal), 1.0f);
     auto sin_theta = std::sqrt(1.0f - cos_theta * cos_theta);
 
-    auto point = hit_record.point - hit_record.normal * 0.0001f;
+    auto point = hit_record.point;
 
     auto scattered_direction = glm::vec3{};
     if (ri * sin_theta > 1.0f || reflectance(cos_theta, ri) > prng::get_real(0.0f, 1.0f)) {
       scattered_direction = glm::reflect(direction, hit_record.normal);
+      point += hit_record.normal * g_bias;
     } else {
       scattered_direction = glm::refract(direction, hit_record.normal, ri);
+      point -= hit_record.normal * g_bias;
     }
 
     return ScatterData{glm::vec3{1.0f}, Ray{point, scattered_direction, ray.time()}};
@@ -118,6 +118,26 @@ public:
 
 private:
   float m_refraction_index{};
+};
+
+class DiffuseLight : public Material {
+public:
+  DiffuseLight(std::shared_ptr<Texture> texture)
+    : m_texture{texture}
+  {}
+
+  DiffuseLight(const glm::vec3& color)
+    : m_texture{std::make_shared<SolidColor>(color)}
+  {}
+
+  auto scatter(const Ray&, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
+    auto uv = hit_record.texture_coords;
+    auto emission = m_texture->value(uv.x, uv.y, hit_record.point);
+    return ScatterData{glm::vec3{}, Ray{}, emission};
+  }
+
+private:
+  std::shared_ptr<Texture> m_texture{};
 };
 
 #endif

@@ -35,7 +35,7 @@ auto trace(const Ray& ray, const Hittables& hittables) -> std::optional<HitRecor
   return closest_hit_record;
 }
 
-auto ray_cast(const Ray& ray, unsigned depth, const Hittables& hittables) -> glm::vec3 {
+auto ray_cast(const Ray& ray, unsigned depth, const glm::vec3& background_color, const Hittables& hittables) -> glm::vec3 {
   if (depth == 0) {
     return glm::vec3{0.0f};
   }
@@ -44,24 +44,26 @@ auto ray_cast(const Ray& ray, unsigned depth, const Hittables& hittables) -> glm
   if (hit_record) {
     auto scatter_data = hit_record->material->scatter(ray, *hit_record);
     if (scatter_data) {
-      return scatter_data->attenuation * ray_cast(scatter_data->scattered, depth - 1, hittables);
+      if (!near_zero(scatter_data->emission)) {
+        return scatter_data->emission;
+      }
+      return scatter_data->attenuation * ray_cast(scatter_data->scattered, depth - 1, background_color, hittables);
     }
     return glm::vec3{0.0f};
   }
 
-  auto unit_direction = glm::normalize(ray.direction());
-  auto t = 0.5f * (unit_direction.y + 1.0f);
-  return (1.0f - t) * glm::vec3{1.0f} + t * glm::vec3{0.5f, 0.7f, 1.0f};
+  return background_color;
 }
 
 struct RenderOptions {
-  float fov{};
+  float fov{0.9f};
   unsigned num_samples{};
   unsigned max_depth{};
   glm::vec3 look_from{};
   glm::vec3 look_at{};
-  float focus_distance{};
+  float focus_distance{1.0f};
   float defocus_angle{};
+  glm::vec3 background_color{0.5f, 0.7f, 1.0f};
 };
 
 auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) -> void {
@@ -85,7 +87,7 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
   auto color_scale = 1.0f / static_cast<float>(options.num_samples);
 
   auto framebuffer = std::vector<glm::vec3>(ppm.width() * ppm.height());
-
+ 
   auto timer = Timer{};
 
   #pragma omp parallel for schedule(dynamic, 1)
@@ -107,7 +109,7 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
 
         auto origin = options.look_from + lens_offset;
         auto ray = Ray{origin, direction + dir_offset - origin, prng::get_real(0.0f, 1.0f)};
-        color += ray_cast(ray, options.max_depth, hittables);
+        color += ray_cast(ray, options.max_depth, options.background_color, hittables);
       }
 
       framebuffer[y * ppm.width() + x] = color * color_scale;

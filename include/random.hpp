@@ -6,6 +6,7 @@
 
 #include <random>
 #include <chrono>
+#include <cmath>
 
 namespace prng {
   thread_local auto rd = std::random_device{};
@@ -25,12 +26,15 @@ namespace prng {
   }
 
   auto get_unit_vector() -> glm::vec3 {
-    auto theta = prng::get_real(0.0f, 2.0f * glm::pi<float>());
-    auto phi = prng::get_real(0.0f, glm::pi<float>());
-    return glm::vec3{
-      std::sin(phi) * std::cos(theta),
-      std::cos(phi),
-      std::sin(phi) * std::sin(theta)};
+    auto a = get_real(0.0f, 2.0f * glm::pi<float>());
+    auto z = get_real(-1.0f, 1.0f);
+    auto r = std::sqrt(1.0f - z * z);
+    return glm::vec3{r * std::cos(a), r * std::sin(a), z};
+  }
+
+  auto get_hemisphere_vector(const glm::vec3& normal) -> glm::vec3 {
+    auto unit_vector = get_unit_vector();
+    return glm::dot(unit_vector, normal) > 0.0f ? unit_vector : -unit_vector;
   }
 }
 #endif

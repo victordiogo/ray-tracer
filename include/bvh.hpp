@@ -20,7 +20,7 @@ public:
     auto axis = bounding_box.longest_axis();
 
     auto compare = [axis](const auto& a, const auto& b) {
-      return a->bounding_box().min()[axis] < b->bounding_box().min()[axis];
+      return a->bounding_box().axes()[axis].min < b->bounding_box().axes()[axis].min;
     };
 
     auto span = end - start;
