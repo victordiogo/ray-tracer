@@ -140,4 +140,23 @@ private:
   std::shared_ptr<Texture> m_texture{};
 };
 
+class Isotropic : public Material {
+public:
+  Isotropic(std::shared_ptr<Texture> texture)
+    : m_texture{texture}
+  {}
+
+  Isotropic(const glm::vec3& color)
+    : m_texture{std::make_shared<SolidColor>(color)}
+  {}
+
+  auto scatter(const Ray& ray, const HitRecord& hit_record) const -> std::optional<ScatterData> override {
+    auto attenuation = m_texture->value(hit_record.texture_coords.x, hit_record.texture_coords.y, hit_record.point);
+    return ScatterData{attenuation, Ray{hit_record.point, prng::get_unit_vector(), ray.time()}};
+  }
+
+private:
+  std::shared_ptr<Texture> m_texture{};
+};
+
 #endif

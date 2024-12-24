@@ -5,3 +5,4 @@ Ray Tracer based on [Ray Tracing in One Weekend Series](https://raytracing.githu
 
 # Second Book
 ![Image of the second book](./assets/readme/book-two-cornell.jpg)
+![Image of the second book](./assets/readme/final.jpg)
