@@ -46,7 +46,8 @@ public:
     auto ab = m_b - m_a;
     auto ac = m_c - m_a;
 
-    auto det = determinant(ab, ac, -ray.direction());
+    auto abxd = glm::cross(ab, ray.direction());
+    auto det = glm::dot(abxd, ac);
     if (std::fabs(det) < 1e-6f) {
       return {};
     }
@@ -54,19 +55,20 @@ public:
     auto inv_det = 1.0f / det;
     auto po = ray.origin() - m_a;
 
-    auto det_u = determinant(po, ac, -ray.direction());
+    auto acxpo = glm::cross(ac, po);
+    auto det_u = glm::dot(acxpo, ray.direction());
     auto u = det_u * inv_det;
     if (u < 0.0f || u > 1.0f) {
       return {};
     }
 
-    auto det_v = determinant(ab, po, -ray.direction());
+    auto det_v = glm::dot(abxd, po);
     auto v = det_v * inv_det;
     if (v < 0.0f || v + u > 1.0f) {
       return {};
     }
 
-    auto det_t = determinant(ab, ac, po);
+    auto det_t = glm::dot(acxpo, ab);
     auto t = det_t * inv_det;
     if (t < min_distance || max_distance < t) {
       return {};

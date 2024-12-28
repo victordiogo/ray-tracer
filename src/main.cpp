@@ -286,8 +286,8 @@ auto cornell_box() {
 
   auto ppm = Ppm{"output.ppm", 1000, 1000};
   auto options = RenderOptions{};
-  options.num_samples = 50u;
-  options.max_depth = 15u;
+  options.num_samples = 20u;
+  options.max_depth = 5u;
   options.fov = 40.0f * glm::pi<float>() / 180.0f;
   options.look_from = glm::vec3{278.0f, 278.0f, -800.0f};
   options.look_at = glm::vec3{278.0f, 278.0f, 0.0f};
@@ -324,8 +324,8 @@ auto mesh() {
 
   auto ppm = Ppm{"output.ppm", 900, 600};
   auto options = RenderOptions{};
-  options.num_samples = 5000u;
-  options.max_depth = 20u;
+  options.num_samples = 80u;
+  options.max_depth = 6u;
   options.fov = 30.0f * glm::pi<float>() / 180.0f;
   options.look_from = glm::vec3{1.0f, 0.8f, 2.0f};
   options.look_at = glm::vec3{0.0f, 0.2f, 0.0f};
@@ -490,9 +490,9 @@ auto main() -> int {
   // quads();
   // simple_light();
   // cornell_box();
-  // mesh();
+  mesh();
   // cornell_smoke();
-  final_scene();
+  // final_scene();
 
   return 0;
 }

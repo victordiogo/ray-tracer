@@ -10,13 +10,6 @@
 #include <optional>
 #include <iostream>
 
-// a, b and c are column vectors
-auto determinant(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c) -> float {
-  return a.x * (b.y * c.z - c.y * b.z) 
-         - a.y * (b.x * c.z - c.x * b.z) 
-         + a.z * (b.x * c.y - c.x * b.y);
-}
-
 class Quad : public Hittable {
 public:
   Quad(const glm::vec3& p, const glm::vec3& q, const glm::vec3& r, const std::shared_ptr<Material>& material)
@@ -42,7 +35,8 @@ public:
     // o + dt = p + uq + vr
     // PO = matrix(q, r, -d) * vector(u, v, t)
 
-    auto det = determinant(m_q, m_r, -ray.direction());
+    auto qxd = glm::cross(m_q, ray.direction());
+    auto det = glm::dot(qxd, m_r);
     if (std::fabs(det) < 1e-6f) {
       return {};
     }
@@ -50,19 +44,20 @@ public:
     auto inv_det = 1.0f / det;
     auto po = ray.origin() - m_p;
 
-    auto det_u = determinant(po, m_r, -ray.direction());
+    auto rxpo = glm::cross(m_r, po);
+    auto det_u = glm::dot(rxpo, ray.direction());
     auto u = det_u * inv_det;
     if (u < 0.0f || u > 1.0f) {
       return {};
     }
 
-    auto det_v = determinant(m_q, po, -ray.direction());
+    auto det_v = glm::dot(qxd, po);
     auto v = det_v * inv_det;
     if (v < 0.0f || v > 1.0f) {
       return {};
     }
 
-    auto det_t = determinant(m_q, m_r, po);
+    auto det_t = glm::dot(rxpo, m_q);
     auto t = det_t * inv_det;
     if (t < min_distance || max_distance < t) {
       return {};
