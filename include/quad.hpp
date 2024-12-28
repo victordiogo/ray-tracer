@@ -16,6 +16,8 @@ public:
     : m_p{p}
     , m_q{q}
     , m_r{r}
+    , m_qxr{glm::cross(m_q, m_r)}
+    , m_normal{glm::normalize(m_qxr)}
     , m_material{material}
   {
     set_bounding_box();
@@ -35,8 +37,7 @@ public:
     // o + dt = p + uq + vr
     // PO = matrix(q, r, -d) * vector(u, v, t)
 
-    auto qxd = glm::cross(m_q, ray.direction());
-    auto det = glm::dot(qxd, m_r);
+    auto det = glm::dot(m_qxr, -ray.direction());
     if (std::fabs(det) < 1e-6f) {
       return {};
     }
@@ -44,35 +45,36 @@ public:
     auto inv_det = 1.0f / det;
     auto po = ray.origin() - m_p;
 
-    auto rxpo = glm::cross(m_r, po);
-    auto det_u = glm::dot(rxpo, ray.direction());
+    auto dxpo = glm::cross(ray.direction(), po);
+    auto det_u = glm::dot(-dxpo, m_r);
     auto u = det_u * inv_det;
     if (u < 0.0f || u > 1.0f) {
       return {};
     }
 
-    auto det_v = glm::dot(qxd, po);
+    auto det_v = glm::dot(dxpo, m_q);
     auto v = det_v * inv_det;
     if (v < 0.0f || v > 1.0f) {
       return {};
     }
 
-    auto det_t = glm::dot(rxpo, m_q);
+    auto det_t = glm::dot(m_qxr, po);
     auto t = det_t * inv_det;
     if (t < min_distance || max_distance < t) {
       return {};
     }
 
-    auto normal = glm::normalize(glm::cross(m_q, m_r));
-    auto front_face = glm::dot(ray.direction(), normal) < 0.0f;
+    auto front_face = glm::dot(ray.direction(), m_normal) < 0.0f;
 
-    return HitRecord{t, front_face, ray.at(t), front_face ? normal : -normal, m_material, glm::vec2{u, v}};
+    return HitRecord{t, front_face, ray.at(t), front_face ? m_normal : -m_normal, m_material, glm::vec2{u, v}};
   }
 
 private:
   glm::vec3 m_p{};
   glm::vec3 m_q{};
   glm::vec3 m_r{};
+  glm::vec3 m_qxr{};
+  glm::vec3 m_normal{};
   std::shared_ptr<Material> m_material{};
   Aabb m_bounding_box{};
 };

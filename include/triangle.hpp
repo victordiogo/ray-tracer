@@ -7,6 +7,8 @@
 #include "quad.hpp"
 
 #include <glm/vec3.hpp>
+#include <glm/vec2.hpp>
+#include <glm/geometric.hpp>
 
 #include <memory>
 
@@ -19,7 +21,9 @@ public:
     : m_a(a), m_b(b), m_c(c)
     , m_na(na), m_nb(nb), m_nc(nc)
     , m_ta(ta), m_tb(tb), m_tc(tc)
-    , m_material(material) {
+    , m_abxac(glm::cross(b - a, c - a))
+    , m_material(material) 
+  {
     auto min = glm::vec3{
       std::fmin(std::fmin(a.x, b.x), c.x),
       std::fmin(std::fmin(a.y, b.y), c.y),
@@ -46,8 +50,7 @@ public:
     auto ab = m_b - m_a;
     auto ac = m_c - m_a;
 
-    auto abxd = glm::cross(ab, ray.direction());
-    auto det = glm::dot(abxd, ac);
+    auto det = glm::dot(m_abxac, -ray.direction());
     if (std::fabs(det) < 1e-6f) {
       return {};
     }
@@ -55,20 +58,20 @@ public:
     auto inv_det = 1.0f / det;
     auto po = ray.origin() - m_a;
 
-    auto acxpo = glm::cross(ac, po);
-    auto det_u = glm::dot(acxpo, ray.direction());
+    auto dxpo = glm::cross(ray.direction(), po);
+    auto det_u = glm::dot(-dxpo, ac);
     auto u = det_u * inv_det;
     if (u < 0.0f || u > 1.0f) {
       return {};
     }
 
-    auto det_v = glm::dot(abxd, po);
+    auto det_v = glm::dot(dxpo, ab);
     auto v = det_v * inv_det;
     if (v < 0.0f || v + u > 1.0f) {
       return {};
     }
 
-    auto det_t = glm::dot(acxpo, ab);
+    auto det_t = glm::dot(m_abxac, po);
     auto t = det_t * inv_det;
     if (t < min_distance || max_distance < t) {
       return {};
@@ -134,6 +137,7 @@ private:
   glm::vec2 m_ta{};
   glm::vec2 m_tb{};
   glm::vec2 m_tc{};
+  glm::vec3 m_abxac{};
   std::shared_ptr<Material> m_material{};
   Aabb m_bounding_box{};
 };

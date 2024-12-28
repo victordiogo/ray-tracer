@@ -324,7 +324,7 @@ auto mesh() {
 
   auto ppm = Ppm{"output.ppm", 900, 600};
   auto options = RenderOptions{};
-  options.num_samples = 80u;
+  options.num_samples = 30u;
   options.max_depth = 6u;
   options.fov = 30.0f * glm::pi<float>() / 180.0f;
   options.look_from = glm::vec3{1.0f, 0.8f, 2.0f};
@@ -489,8 +489,8 @@ auto main() -> int {
   // perlin_spheres();
   // quads();
   // simple_light();
-  // cornell_box();
-  mesh();
+  cornell_box();
+  // mesh();
   // cornell_smoke();
   // final_scene();
 
