@@ -84,7 +84,10 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
 
   auto defocus_radius = options.focus_distance * std::tan(options.defocus_angle / 2);
 
-  auto color_scale = 1.0f / static_cast<float>(options.num_samples);
+  auto sqrt_samples = static_cast<unsigned>(std::sqrt(static_cast<float>(options.num_samples)));
+  auto inv_sqrt_samples = 1.0f / static_cast<float>(sqrt_samples);
+
+  auto color_scale = 1.0f / static_cast<float>(sqrt_samples * sqrt_samples); 
 
   auto framebuffer = std::vector<glm::vec3>(ppm.width() * ppm.height());
  
@@ -98,21 +101,30 @@ auto render(Ppm& ppm, const RenderOptions& options, const Hittables& hittables) 
         static_cast<float>(x) * du + 
         static_cast<float>(y) * dv;
         
-      for (auto sample = 0u; sample < options.num_samples; ++sample) {
-        auto theta = prng::get_real(0.0f, 2.0f * glm::pi<float>());
-        auto r = prng::get_real(0.0f, 1.0f);
-        auto lens_offset = defocus_radius * r * (std::cos(theta) * u + std::sin(theta) * v);
+      for (auto sample_y = 0u; sample_y < sqrt_samples; ++sample_y) {
+        for (auto sample_x = 0u; sample_x < sqrt_samples; ++sample_x) {
+          auto theta = prng::get_real(0.0f, 2.0f * glm::pi<float>());
+          auto r = prng::get_real(0.0f, 1.0f);
+          auto lens_offset = defocus_radius * r * (std::cos(theta) * u + std::sin(theta) * v);
 
-        auto dir_offset = 
-          prng::get_real(-0.5f, 0.5f) * du + 
-          prng::get_real(-0.5f, 0.5f) * dv;
+          auto sxf = static_cast<float>(sample_x);
+          auto syf = static_cast<float>(sample_y);
+          auto dir_offset = 
+            ((sxf + prng::get_real(0.0f, 1.0f)) * inv_sqrt_samples - 0.5f) * du + 
+            ((syf + prng::get_real(0.0f, 1.0f)) * inv_sqrt_samples - 0.5f) * dv;
 
-        auto origin = options.look_from + lens_offset;
-        auto ray = Ray{origin, direction + dir_offset - origin, prng::get_real(0.0f, 1.0f)};
-        color += ray_cast(ray, options.max_depth, options.background_color, hittables);
+          auto origin = options.look_from + lens_offset;
+          auto ray = Ray{origin, direction + dir_offset - origin, prng::get_real(0.0f, 1.0f)};
+          color += ray_cast(ray, options.max_depth, options.background_color, hittables);
+        }
       }
 
       framebuffer[y * ppm.width() + x] = color * color_scale;
+    }
+
+    if (y % 50 == 0) {
+      auto progress = static_cast<float>(y) / static_cast<float>(ppm.height());
+      std::cout << "Progress: " << progress * 100 << "% (" << timer.elapsed() / 1000 << "s)\n";
     }
   }
   std::cout << "Render time: " << timer.elapsed() / 1000 << "s\n";

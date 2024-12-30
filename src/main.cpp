@@ -494,5 +494,17 @@ auto main() -> int {
   // cornell_smoke();
   // final_scene();
 
+  // auto a = 0.0f;
+  // auto b = 2.0f;
+  // auto sum = 0.0f;
+  // auto samples = 1000000u;
+
+  // for (auto i = 0u; i < samples; ++i) {
+  //   auto x = prng::get_real(a, b);
+  //   sum += x * x;
+  // }
+
+  // std::cout << "area(x^2, 0, 2) = " << (b - a) * sum / static_cast<float>(samples) << '\n';
+
   return 0;
 }
