@@ -1,5 +1,8 @@
 Ray Tracer based on [Ray Tracing in One Weekend Series](https://raytracing.github.io)
 
+# To Do
+- Use spectral colors
+
 # First Book
 ![Image of the first book](./assets/readme/book-one.jpg)
 

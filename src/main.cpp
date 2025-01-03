@@ -284,10 +284,10 @@ auto cornell_box() {
 
   hittables = {std::make_shared<BvhNode>(hittables)};
 
-  auto ppm = Ppm{"output.ppm", 1000, 1000};
+  auto ppm = Ppm{"output.ppm", 600, 600};
   auto options = RenderOptions{};
-  options.num_samples = 20u;
-  options.max_depth = 5u;
+  options.num_samples = 100u;
+  options.max_depth = 6u;
   options.fov = 40.0f * glm::pi<float>() / 180.0f;
   options.look_from = glm::vec3{278.0f, 278.0f, -800.0f};
   options.look_at = glm::vec3{278.0f, 278.0f, 0.0f};
